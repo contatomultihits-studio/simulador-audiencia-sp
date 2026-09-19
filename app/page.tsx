@@ -15,6 +15,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<"current" | "projection">("current");
   const [recorte, setRecorte] = useState<"todos_os_dias" | "seg_sex_06_19">("todos_os_dias");
   const [loadingRecorte, setLoadingRecorte] = useState(false);
+  const [recorteError, setRecorteError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -37,10 +38,11 @@ export default function Home() {
         setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
-        setRadios(demoRadios);
+        setRadios([]);
         setDataMode("demo");
+        setRecorteError(error instanceof Error ? error.message : "Não foi possível carregar a base oficial.");
       })
       .finally(() => {
         if (active) setLoadingRecorte(false);
@@ -121,7 +123,7 @@ export default function Home() {
     return { width, height, points, line: points.map((p) => `${p.x},${p.y}`).join(" ") };
   }, [selectedData, september, viewMode]);
 
-  if (loadingRecorte || !selectedData) {
+  if (loadingRecorte || !selectedData || recorteError) {
     return (
       <main className="shell">
         <header className="hero">
