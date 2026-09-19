@@ -250,6 +250,12 @@ export default function Home() {
             ? "A base oficial ainda não está completa. A projeção é apenas para visualização e não altera os dados oficiais."
             : "Modo demonstração: os dados históricos são ilustrativos. A projeção de setembro não altera a base."}
       </footer>
+
+      <footer className="methodology">
+        <div className="methodology-label">RECORTE E CÁLCULO</div>
+        <p><strong>Recorte:</strong> segunda a segunda · todos os dias · todos os horários.</p>
+        <p><strong>Cálculo:</strong> média móvel de 3 meses. Ao entrar setembro, junho sai da janela: <strong>JUL + AGO + SET ÷ 3</strong>. Na simulação, cada rádio pode receber sua própria projeção; sem projeção, o sistema repete agosto.</p>
+      </footer>
     </main>
   );
 }
