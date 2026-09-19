@@ -24,7 +24,7 @@ export default function Home() {
       .then((official) => {
         if (!active) return;
         if (!official.length) {
-          setRadios([]);
+          setRadios(demoRadios);
           setDataMode("demo");
           return;
         }
@@ -34,7 +34,7 @@ export default function Home() {
       })
       .catch(() => {
         if (!active) return;
-        setRadios([]);
+        setRadios(demoRadios);
         setDataMode("demo");
       })
       .finally(() => {
