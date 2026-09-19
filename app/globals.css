@@ -90,3 +90,7 @@ footer{margin-top:18px;color:#596376;font-size:11px}
   .status{white-space:normal}
 }
 .panel-actions{display:flex;align-items:center;gap:10px}.reset-button{border:1px solid #303747;background:#111620;color:#b8c0cc;border-radius:8px;padding:7px 9px;font-size:9px;letter-spacing:.8px;cursor:pointer}.reset-button:hover{background:#1a202b}
+
+
+.methodology{margin:28px 0 10px;padding:18px 20px;border-top:1px solid #252b36;color:#8e98a8;font-size:11px;line-height:1.7}.methodology-label{margin-bottom:7px;color:#667080;font-size:9px;font-weight:700;letter-spacing:1.4px}.methodology p{margin:3px 0}.methodology strong{color:#c3cad4;font-weight:600}
+.reset-button{border-color:#596579;background:#171d28;color:#e5eaf1;box-shadow:0 0 0 1px rgba(255,255,255,.03) inset}.reset-button:hover{background:#252d3b;border-color:#7b879a;transform:translateY(-1px)}
