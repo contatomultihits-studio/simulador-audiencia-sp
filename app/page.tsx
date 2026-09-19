@@ -74,7 +74,7 @@ export default function Home() {
       : "caiu " + Math.abs(positionChange) + " posição" + (Math.abs(positionChange) > 1 ? "ões" : "");
 
   const chart = useMemo(() => {
-    const values = [selectedData.jun, selectedData.jul, selectedData.ago, september];
+    const values = viewMode === "projection" ? [selectedData.jun, selectedData.jul, selectedData.ago, september] : [selectedData.jun, selectedData.jul, selectedData.ago];
     const width = 640;
     const height = 210;
     const padX = 38;
@@ -83,12 +83,12 @@ export default function Home() {
     const max = Math.max(...values);
     const span = Math.max(max - min, 1);
     const points = values.map((value, index) => {
-      const x = padX + index * ((width - padX * 2) / 3);
+      const x = padX + index * ((width - padX * 2) / (values.length - 1));
       const y = height - padY - ((value - min) / span) * (height - padY * 2);
       return { x, y, value };
     });
     return { width, height, points, line: points.map((p) => `${p.x},${p.y}`).join(" ") };
-  }, [selectedData, september]);
+  }, [selectedData, september, viewMode]);
 
   if (!selectedData) return null;
 
@@ -142,7 +142,7 @@ export default function Home() {
                 <span className="radio-name">{r.radio}</span>
                 <span className="media">{fmt(r.media)}</span>
                 <span className={"delta " + (r.change >= 0 ? "up" : "down")}>
-                  {r.change >= 0 ? "+" : ""}{fmt(r.change)}
+                  {viewMode === "projection" ? ((r.change >= 0 ? "+" : "") + fmt(r.change)) : "—"}
                 </span>
               </motion.button>
             ))}
@@ -169,9 +169,9 @@ export default function Home() {
               </div>
             </div>
             <div className="projection-number">
-              <span>SETEMBRO</span>
-              <strong>{fmt(september)}</strong>
-              <small>{projectionChange >= 0 ? "+" : ""}{fmt(projectionChange)} vs. agosto</small>
+              <span>{viewMode === "projection" ? "SETEMBRO" : "AGOSTO"}</span>
+              <strong>{fmt(viewMode === "projection" ? september : selectedData.ago)}</strong>
+              <small>{viewMode === "projection" ? ((projectionChange >= 0 ? "+" : "") + fmt(projectionChange) + " vs. agosto") : "último mês da base"}</small>
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export default function Home() {
             <div className="history-head">
               <div>
                 <span className="eyebrow">EVOLUÇÃO MÊS A MÊS</span>
-                <strong>Histórico → projeção</strong>
+                <strong>{viewMode === "projection" ? "Histórico → projeção" : "Histórico real"}</strong>
               </div>
               <span className="projection-badge">{viewMode === "projection" ? "SET · SIMULAÇÃO" : "BASE REAL"}</span>
             </div>
@@ -188,12 +188,12 @@ export default function Home() {
               <svg viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label={`Audiência de junho a setembro de ${selectedData.radio}`}>
                 <line x1="38" y1="180" x2="602" y2="180" className="chart-axis" />
                 <polyline points={chart.line} className="chart-line" />
-                <line x1={chart.points[2].x} y1="22" x2={chart.points[2].x} y2="190" className="projection-divider" />
+                {viewMode === "projection" ? <line x1={chart.points[2].x} y1="22" x2={chart.points[2].x} y2="190" className="projection-divider" /> : null}
                 {chart.points.map((point, index) => (
                   <g key={index}>
                     <circle cx={point.x} cy={point.y} r={index === 3 ? 6 : 4.5} className={index === 3 ? "chart-dot projected" : "chart-dot"} />
                     <text x={point.x} y="202" textAnchor="middle" className="chart-label">
-                      {["JUN", "JUL", "AGO", "SET"][index]}
+                      {(viewMode === "projection" ? ["JUN", "JUL", "AGO", "SET"] : ["JUN", "JUL", "AGO"])[index]}
                     </text>
                     <text x={point.x} y={Math.max(point.y - 12, 15)} textAnchor="middle" className="chart-value">
                       {fmt(point.value)}
@@ -207,7 +207,7 @@ export default function Home() {
               <div><span>JUN</span><b>{fmt(selectedData.jun)}</b></div>
               <div><span>JUL</span><b>{fmt(selectedData.jul)}</b></div>
               <div><span>AGO</span><b>{fmt(selectedData.ago)}</b></div>
-              <div className="projected"><span>SET</span><b>{fmt(september)}</b></div>
+              {viewMode === "projection" ? <div className="projected"><span>SET</span><b>{fmt(september)}</b></div> : null}
             </div>
           </div>
 
@@ -239,7 +239,7 @@ export default function Home() {
             </div>
             <div className="flow-arrow">{viewMode === "projection" ? "→" : "•"}</div>
             <div className="projected">
-              <span>{viewMode === "projection" ? "MÉDIA PROJETADA" : "MÉDIA ATUAL"}</span>
+              <span>{viewMode === "projection" ? "MÉDIA PROJETADA" : "MÉDIA 3 MESES"}</span>
               <b>{fmt(selectedData.media)}</b>
             </div>
             <div className={"flow-change " + (selectedData.change >= 0 ? "up" : "down")}>
