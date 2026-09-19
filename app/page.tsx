@@ -253,8 +253,9 @@ export default function Home() {
 
       <footer className="methodology">
         <div className="methodology-label">RECORTE E CÁLCULO</div>
-        <p><strong>Recorte:</strong> segunda a segunda · todos os dias · todos os horários.</p>
-        <p><strong>Cálculo:</strong> média móvel de 3 meses. Ao entrar setembro, junho sai da janela: <strong>JUL + AGO + SET ÷ 3</strong>. Na simulação, cada rádio pode receber sua própria projeção; sem projeção, o sistema repete agosto.</p>
+        <p><strong>Recorte de audiência:</strong> os números apresentados correspondem ao período de <strong>segunda a segunda</strong>, considerando <strong>todos os dias da semana e todos os horários</strong>.</p>
+        <p><strong>Como calculamos:</strong> o ranking utiliza uma <strong>média móvel de 3 meses</strong>. No cenário real, a média é calculada com <strong>junho + julho + agosto</strong>. Ao projetar setembro, o mês mais antigo é descartado e a nova média passa a considerar <strong>julho + agosto + setembro</strong>.</p>
+        <p>Na simulação, cada rádio pode receber sua própria projeção para setembro. As rádios que ainda não receberam uma projeção <strong>repetem o resultado de agosto</strong>. Os dados históricos permanecem preservados e a simulação não altera os dados oficiais.</p>
       </footer>
     </main>
   );
