@@ -52,7 +52,8 @@ export default function Home() {
   const nextRadio = ranking[position - 2];
   const distanceToNext = nextRadio ? selectedData.media - nextRadio.media : 0;
 
-  const september = projections[selectedData.radio] ?? selectedData.ago;\n  const projectionChange = september - selectedData.ago;
+  const september = projections[selectedData.radio] ?? selectedData.ago;
+  const projectionChange = september - selectedData.ago;
   const positionText = positionChange === 0
     ? "mesma posição"
     : positionChange > 0
