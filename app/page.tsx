@@ -12,7 +12,7 @@ export default function Home() {
   const [radios, setRadios] = useState(demoRadios);
   const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
-  const [projections, setProjections] = useState<Record<string, number>>({ Disney: 70000 });
+  const [projections, setProjections] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadOfficialAudience()
@@ -103,7 +103,7 @@ export default function Home() {
               <div className="eyebrow">TOP 15 · MÉDIA MÓVEL</div>
               <h2>Ranking</h2>
             </div>
-            <span className="muted">SETEMBRO · PROJEÇÃO</span>
+            <div className="panel-actions"><span className="muted">{hasSimulation ? "SETEMBRO · SIMULAÇÃO" : "DADOS REAIS"}</span>{hasSimulation ? <button className="reset-button" onClick={() => setProjections({})}>↺ VOLTAR AO ORIGINAL</button> : null}</div>
           </div>
 
           <div className="rows">
@@ -158,7 +158,7 @@ export default function Home() {
                 <span className="eyebrow">EVOLUÇÃO MÊS A MÊS</span>
                 <strong>Histórico → projeção</strong>
               </div>
-              <span className="projection-badge">SET · PROJEÇÃO</span>
+              <span className="projection-badge">{hasSimulation ? "SET · SIMULAÇÃO" : "SET · BASE REAL"}</span>
             </div>
 
             <div className="chart-wrap">
