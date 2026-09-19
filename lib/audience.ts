@@ -9,11 +9,6 @@ type AudienceRow = {
 
 export type AudienceCut = "todos_os_dias" | "seg_sex_06_19";
 
-const TABLE_BY_CUT: Record<AudienceCut, string> = {
-  todos_os_dias: "audiencia_todos_os_dias",
-  seg_sex_06_19: "audiencia_seg_sex_06_19"
-};
-
 const monthKey = (date: string) => date.slice(0, 7);
 
 function buildRanking(rows: AudienceRow[]): RadioMonth[] {
@@ -30,7 +25,6 @@ function buildRanking(rows: AudienceRow[]): RadioMonth[] {
   for (const row of rows) {
     const key = monthKey(row.periodo);
     if (!periods.includes(key)) continue;
-
     const item = grouped.get(row.radio) ?? {};
     item[key] = row.audiencia;
     grouped.set(row.radio, item);
@@ -50,21 +44,20 @@ function buildRanking(rows: AudienceRow[]): RadioMonth[] {
     }));
 }
 
-export async function loadOfficialAudience(
-  recorte: AudienceCut = "todos_os_dias"
-): Promise<RadioMonth[]> {
-  if (!supabase) throw new Error("Supabase não configurado");
+export async function loadOfficialAudience(recorte: AudienceCut): Promise<RadioMonth[]> {
+  if (!supabase) throw new Error("Supabase não configurado na Vercel");
 
-  const table = TABLE_BY_CUT[recorte];
+  const { data, error } = await supabase.rpc("get_audience_cut", {
+    p_recorte: recorte
+  });
 
-  const { data, error } = await supabase
-    .from(table)
-    .select("radio, periodo, audiencia")
-    .eq("cidade", "São Paulo")
-    .eq("uf", "SP")
-    .order("periodo", { ascending: false });
+  if (error) throw new Error(`Supabase: ${error.message}`);
 
-  if (error) throw error;
+  const ranking = buildRanking((data ?? []) as AudienceRow[]);
 
-  return buildRanking((data ?? []) as AudienceRow[]);
+  if (ranking.length === 0) {
+    throw new Error(`A tabela do recorte "${recorte}" não retornou os 3 meses necessários.`);
+  }
+
+  return ranking;
 }
