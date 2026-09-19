@@ -14,8 +14,10 @@ export default function Home() {
   const [projections, setProjections] = useState<Record<string, number>>({});
   const [viewMode, setViewMode] = useState<"current" | "projection">("current");
   const [recorte, setRecorte] = useState<"todos_os_dias" | "seg_sex_06_19">("todos_os_dias");
+  const [loadingRecorte, setLoadingRecorte] = useState(true);
 
   useEffect(() => {
+    setLoadingRecorte(true);
     loadOfficialAudience(recorte)
       .then((official) => {
         if (!official.length) return;
@@ -23,7 +25,11 @@ export default function Home() {
         setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
       })
-      .catch(() => setDataMode("demo"));
+      .catch(() => {
+        setRadios([]);
+        setDataMode("demo");
+      })
+      .finally(() => setLoadingRecorte(false));
   }, [recorte]);
 
   const hasSimulation = Object.keys(projections).length > 0;
@@ -95,7 +101,19 @@ export default function Home() {
     return { width, height, points, line: points.map((p) => `${p.x},${p.y}`).join(" ") };
   }, [selectedData, september, viewMode]);
 
-  if (!selectedData) return null;
+  if (loadingRecorte || !selectedData) {
+    return (
+      <main className="shell">
+        <header className="hero">
+          <div>
+            <div className="eyebrow">AUDIÊNCIA SP</div>
+            <h1>Carregando<br />o recorte.</h1>
+            <p>Atualizando a base de audiência para a visualização selecionada.</p>
+          </div>
+        </header>
+      </main>
+    );
+  }
 
   return (
     <main className="shell">
