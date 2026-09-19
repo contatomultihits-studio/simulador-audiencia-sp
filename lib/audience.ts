@@ -9,6 +9,11 @@ type AudienceRow = {
 
 export type AudienceCut = "todos_os_dias" | "seg_sex_06_19";
 
+const TABLE_BY_CUT: Record<AudienceCut, string> = {
+  todos_os_dias: "audiencia_todos_os_dias",
+  seg_sex_06_19: "audiencia_seg_sex_06_19"
+};
+
 const monthKey = (date: string) => date.slice(0, 7);
 
 function buildRanking(rows: AudienceRow[]): RadioMonth[] {
@@ -47,16 +52,22 @@ function buildRanking(rows: AudienceRow[]): RadioMonth[] {
 export async function loadOfficialAudience(recorte: AudienceCut): Promise<RadioMonth[]> {
   if (!supabase) throw new Error("Supabase não configurado na Vercel");
 
-  const { data, error } = await supabase.rpc("get_audience_cut", {
-    p_recorte: recorte
-  });
+  const table = TABLE_BY_CUT[recorte];
 
-  if (error) throw new Error(`Supabase: ${error.message}`);
+  const { data, error } = await supabase
+    .from(table)
+    .select("radio, periodo, audiencia")
+    .eq("cidade", "São Paulo")
+    .eq("uf", "SP")
+    .order("periodo", { ascending: false })
+    .limit(500);
+
+  if (error) throw new Error(`Supabase [${table}]: ${error.message}`);
 
   const ranking = buildRanking((data ?? []) as AudienceRow[]);
 
-  if (ranking.length === 0) {
-    throw new Error(`A tabela do recorte "${recorte}" não retornou os 3 meses necessários.`);
+  if (ranking.length < 15) {
+    throw new Error(`A tabela ${table} retornou ${ranking.length} rádios; eram esperadas 15.`);
   }
 
   return ranking;
