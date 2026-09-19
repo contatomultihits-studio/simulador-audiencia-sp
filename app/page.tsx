@@ -8,7 +8,7 @@ import { loadOfficialAudience } from "../lib/audience";
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
 export default function Home() {
-  const [radios, setRadios] = useState(demoRadios);
+  const [radios, setRadios] = useState<typeof demoRadios>([]);
   const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
   const [projections, setProjections] = useState<Record<string, number>>({});
