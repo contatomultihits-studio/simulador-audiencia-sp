@@ -9,7 +9,7 @@ type AudienceRow = {
 
 const monthKey = (date: string) => date.slice(0, 7);
 
-export async function loadOfficialAudience(): Promise<RadioMonth[]> {
+export async function loadOfficialAudience(recorte: "todos_os_dias" | "seg_sex_06_19" = "todos_os_dias"): Promise<RadioMonth[]> {
   if (!supabase) return [];
 
   const { data, error } = await supabase
@@ -17,6 +17,7 @@ export async function loadOfficialAudience(): Promise<RadioMonth[]> {
     .select("radio, periodo, audiencia")
     .eq("cidade", "São Paulo")
     .eq("uf", "SP")
+    .eq("recorte", recorte)
     .order("periodo", { ascending: false });
 
   if (error) throw error;
