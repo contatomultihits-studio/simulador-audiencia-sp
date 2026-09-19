@@ -13,9 +13,10 @@ export default function Home() {
   const [selected, setSelected] = useState("Disney");
   const [projections, setProjections] = useState<Record<string, number>>({});
   const [viewMode, setViewMode] = useState<"current" | "projection">("current");
+  const [recorte, setRecorte] = useState<"todos_os_dias" | "seg_sex_06_19">("todos_os_dias");
 
   useEffect(() => {
-    loadOfficialAudience()
+    loadOfficialAudience(recorte)
       .then((official) => {
         if (!official.length) return;
         setRadios(official);
@@ -23,9 +24,13 @@ export default function Home() {
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
       })
       .catch(() => setDataMode("demo"));
-  }, []);
+  }, [recorte]);
 
   const hasSimulation = Object.keys(projections).length > 0;
+
+  useEffect(() => {
+    setProjections({});
+  }, [recorte]);
 
   const currentRanking = useMemo(() => {
     return [...radios]
@@ -110,7 +115,16 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="view-switch" role="tablist" aria-label="Modo de visualização">
+      <div className="view-switch recorte-switch" role="tablist" aria-label="Recorte de audiência">
+        <button className="cut-all" aria-selected={recorte === "todos_os_dias"} onClick={() => setRecorte("todos_os_dias")} role="tab">
+          TODOS OS DIAS<span>Segunda a segunda · 05–24</span>
+        </button>
+        <button className="cut-weekday" aria-selected={recorte === "seg_sex_06_19"} onClick={() => setRecorte("seg_sex_06_19")} role="tab">
+          SEG–SEX · 06–19<span>Segunda a sexta · 06h às 19h</span>
+        </button>
+      </div>
+
+      <div className="view-switch mode-switch" role="tablist" aria-label="Modo de visualização">
         <button className={viewMode === "current" ? "active" : ""} onClick={() => setViewMode("current")} role="tab" aria-selected={viewMode === "current"}>
           RANKING ATUAL<span>Dados da base</span>
         </button>
@@ -123,7 +137,7 @@ export default function Home() {
         <div className="panel ranking-panel">
           <div className="panel-head">
             <div>
-              <div className="eyebrow">TOP 15 · MÉDIA MÓVEL</div>
+              <div className="eyebrow">TOP 15 · MÉDIA MÓVEL · {recorte === "todos_os_dias" ? "TODOS OS DIAS" : "SEG–SEX · 06–19"}</div>
               <h2>Ranking</h2>
             </div>
             <div className="panel-actions"><span className="muted">{viewMode === "projection" ? "SETEMBRO · SIMULAÇÃO" : "BASE ATUAL"}</span>{viewMode === "projection" && hasSimulation ? <button className="reset-button" onClick={() => setProjections({})}>↺ LIMPAR SIMULAÇÃO</button> : null}</div>
@@ -261,7 +275,7 @@ export default function Home() {
 
       <footer>
         {dataMode === "official"
-          ? "Os meses históricos são preservados. A projeção de setembro existe apenas no simulador e não altera a base oficial."
+          ? "Recorte selecionado: " + (recorte === "todos_os_dias" ? "todos os dias · 05–24" : "seg–sex · 06–19") + ". Os meses históricos são preservados. A projeção de setembro existe apenas no simulador e não altera a base oficial."
           : dataMode === "partial"
             ? "A base oficial ainda não está completa. A projeção é apenas para visualização e não altera os dados oficiais."
             : "Modo demonstração: os dados históricos são ilustrativos. A projeção de setembro não altera a base."}
@@ -269,7 +283,7 @@ export default function Home() {
 
       <footer className="methodology">
         <div className="methodology-label">RECORTE E CÁLCULO</div>
-        <p><strong>Recorte de audiência:</strong> os números apresentados correspondem ao período de <strong>segunda a segunda</strong>, considerando <strong>todos os dias da semana e todos os horários</strong>.</p>
+        <p><strong>Recorte selecionado:</strong> {recorte === "todos_os_dias" ? <>segunda a segunda, todos os dias da semana, Day Parts <strong>05h–24h</strong>.</> : <>segunda a sexta, Day Parts <strong>06h–19h</strong>.</>}</p>
         <p><strong>Como calculamos:</strong> o ranking utiliza uma <strong>média móvel de 3 meses</strong>. No cenário real, a média é calculada com <strong>junho + julho + agosto</strong>. Ao projetar setembro, o mês mais antigo é descartado e a nova média passa a considerar <strong>julho + agosto + setembro</strong>.</p>
         <p>Na simulação, cada rádio pode receber sua própria projeção para setembro. As rádios que ainda não receberam uma projeção <strong>repetem o resultado de agosto</strong>. Os dados históricos permanecem preservados e a simulação não altera os dados oficiais.</p>
       </footer>
