@@ -224,3 +224,49 @@ body{
   box-shadow:0 0 0 1px rgba(255,224,164,.5) inset,0 8px 24px rgba(220,164,77,.18);
 }
 .view-switch button.projection-tab.active span{color:#51401f}
+
+
+/* Audience cut selector: each option stays visually distinct even when inactive */
+.recorte-switch{margin-bottom:10px}
+.recorte-switch button{min-width:205px;position:relative}
+.recorte-switch button.cut-all{
+  color:#62c9ff;
+  background:rgba(76,201,255,.065);
+  box-shadow:inset 0 0 0 1px rgba(76,201,255,.22);
+}
+.recorte-switch button.cut-all span{color:#6e9bb0}
+.recorte-switch button.cut-all:hover{
+  color:#a9e4ff;
+  background:rgba(76,201,255,.11);
+  box-shadow:inset 0 0 0 1px rgba(76,201,255,.42),0 0 20px rgba(76,201,255,.06);
+}
+.recorte-switch button.cut-all[aria-selected="true"]{
+  color:#07131b;
+  background:linear-gradient(135deg,#63d1ff,#3baee0);
+  box-shadow:0 0 0 1px rgba(190,240,255,.55) inset,0 8px 24px rgba(59,174,224,.18);
+}
+.recorte-switch button.cut-all[aria-selected="true"] span{color:#164257}
+
+.recorte-switch button.cut-weekday{
+  color:#c79bff;
+  background:rgba(174,104,255,.065);
+  box-shadow:inset 0 0 0 1px rgba(174,104,255,.22);
+}
+.recorte-switch button.cut-weekday span{color:#9274ae}
+.recorte-switch button.cut-weekday:hover{
+  color:#e5caff;
+  background:rgba(174,104,255,.11);
+  box-shadow:inset 0 0 0 1px rgba(174,104,255,.42),0 0 20px rgba(174,104,255,.06);
+}
+.recorte-switch button.cut-weekday[aria-selected="true"]{
+  color:#170c22;
+  background:linear-gradient(135deg,#d29bff,#a969df);
+  box-shadow:0 0 0 1px rgba(239,211,255,.55) inset,0 8px 24px rgba(169,105,223,.18);
+}
+.recorte-switch button.cut-weekday[aria-selected="true"] span{color:#4a285d}
+
+.mode-switch{margin-bottom:22px}
+@media(max-width:700px){
+  .recorte-switch{width:100%;flex-direction:column}
+  .recorte-switch button{width:100%;min-width:0}
+}
