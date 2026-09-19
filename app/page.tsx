@@ -14,13 +14,18 @@ export default function Home() {
   const [projections, setProjections] = useState<Record<string, number>>({});
   const [viewMode, setViewMode] = useState<"current" | "projection">("current");
   const [recorte, setRecorte] = useState<"todos_os_dias" | "seg_sex_06_19">("todos_os_dias");
-  const [loadingRecorte, setLoadingRecorte] = useState(true);
+  const [loadingRecorte, setLoadingRecorte] = useState(false);
 
   useEffect(() => {
     let active = true;
 
     setLoadingRecorte(true);
-    loadOfficialAudience(recorte)
+    Promise.race([
+      loadOfficialAudience(recorte),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Tempo limite ao consultar a base oficial")), 10000)
+      )
+    ])
       .then((official) => {
         if (!active) return;
 
