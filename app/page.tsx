@@ -129,8 +129,8 @@ export default function Home() {
         <header className="hero">
           <div>
             <div className="eyebrow">AUDIÊNCIA SP</div>
-            <h1>Carregando<br />o recorte.</h1>
-            <p>Atualizando a base de audiência para a visualização selecionada.</p>
+            <h1>{recorteError ? <>Erro ao carregar<br />o recorte.</> : <>Carregando<br />o recorte.</>}</h1>
+            <p>{recorteError || "Atualizando a base de audiência para a visualização selecionada."}</p>
           </div>
         </header>
       </main>
