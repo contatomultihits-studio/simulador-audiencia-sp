@@ -5,16 +5,23 @@ type AudienceRow = {
   radio: string;
   periodo: string;
   audiencia: number;
-  recorte: "todos_os_dias" | "seg_sex_06_19";
 };
 
 export type AudienceCut = "todos_os_dias" | "seg_sex_06_19";
-export type AudienceByCut = Record<AudienceCut, RadioMonth[]>;
+
+const TABLE_BY_CUT: Record<AudienceCut, string> = {
+  todos_os_dias: "audiencia_todos_os_dias",
+  seg_sex_06_19: "audiencia_seg_sex_06_19"
+};
 
 const monthKey = (date: string) => date.slice(0, 7);
 
 function buildRanking(rows: AudienceRow[]): RadioMonth[] {
-  const periods = [...new Set(rows.map((row) => monthKey(row.periodo)))].sort().reverse().slice(0, 3);
+  const periods = [...new Set(rows.map((row) => monthKey(row.periodo)))]
+    .sort()
+    .reverse()
+    .slice(0, 3);
+
   if (periods.length < 3) return [];
 
   const [latest, middle, oldest] = periods;
@@ -23,6 +30,7 @@ function buildRanking(rows: AudienceRow[]): RadioMonth[] {
   for (const row of rows) {
     const key = monthKey(row.periodo);
     if (!periods.includes(key)) continue;
+
     const item = grouped.get(row.radio) ?? {};
     item[key] = row.audiencia;
     grouped.set(row.radio, item);
@@ -42,28 +50,21 @@ function buildRanking(rows: AudienceRow[]): RadioMonth[] {
     }));
 }
 
-export async function loadOfficialAudienceSets(): Promise<AudienceByCut> {
+export async function loadOfficialAudience(
+  recorte: AudienceCut = "todos_os_dias"
+): Promise<RadioMonth[]> {
   if (!supabase) throw new Error("Supabase não configurado");
 
+  const table = TABLE_BY_CUT[recorte];
+
   const { data, error } = await supabase
-    .from("audiencia_ranking")
-    .select("radio, periodo, audiencia, recorte")
+    .from(table)
+    .select("radio, periodo, audiencia")
     .eq("cidade", "São Paulo")
     .eq("uf", "SP")
-    .in("recorte", ["todos_os_dias", "seg_sex_06_19"])
     .order("periodo", { ascending: false });
 
   if (error) throw error;
 
-  const rows = (data ?? []) as AudienceRow[];
-
-  return {
-    todos_os_dias: buildRanking(rows.filter((row) => row.recorte === "todos_os_dias")),
-    seg_sex_06_19: buildRanking(rows.filter((row) => row.recorte === "seg_sex_06_19"))
-  };
-}
-
-export async function loadOfficialAudience(recorte: AudienceCut = "todos_os_dias"): Promise<RadioMonth[]> {
-  const sets = await loadOfficialAudienceSets();
-  return sets[recorte];
+  return buildRanking((data ?? []) as AudienceRow[]);
 }
