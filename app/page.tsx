@@ -1,22 +1,52 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
+import { loadOfficialAudience } from "../lib/audience";
 import { calculateRanking } from "../lib/ranking";
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
 export default function Home() {
+  const [radios, setRadios] = useState(demoRadios);
+  const [dataMode, setDataMode] = useState<"demo" | "official">("demo");
   const [selected, setSelected] = useState("Disney");
   const [september, setSeptember] = useState(55002);
-  const ranking = useMemo(() => calculateRanking(demoRadios, selected, september), [selected, september]);
-  const selectedData = ranking.find((r) => r.radio === selected)!;
+
+  useEffect(() => {
+    loadOfficialAudience()
+      .then((official) => {
+        if (!official.length) return;
+        setRadios(official);
+        setDataMode("official");
+        setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
+      })
+      .catch(() => setDataMode("demo"));
+  }, []);
+
+  const ranking = useMemo(
+    () => calculateRanking(radios, selected, september),
+    [radios, selected, september]
+  );
+
+  const selectedData = ranking.find((r) => r.radio === selected) ?? ranking[0];
   const position = ranking.findIndex((r) => r.radio === selected) + 1;
-  const currentMedia = (selectedData.jun + selectedData.jul + selectedData.ago) / 3;
-  const previousPosition = [...demoRadios]
-    .sort((a, b) => (b.jun + b.jul + b.ago) - (a.jun + a.jul + a.ago))
-    .findIndex((r) => r.radio === selected) + 1;
+  const currentMedia = selectedData
+    ? (selectedData.jun + selectedData.jul + selectedData.ago) / 3
+    : 0;
+
+  const previousRanking = useMemo(
+    () => [...radios].sort((a, b) =>
+      (b.jun + b.jul + b.ago) - (a.jun + a.jul + a.ago)
+    ),
+    [radios]
+  );
+
+  const previousPosition = previousRanking.findIndex((r) => r.radio === selected) + 1;
   const positionChange = previousPosition - position;
+
+  if (!selectedData) return null;
+
   const positionText = positionChange === 0
     ? "mesma posição"
     : positionChange > 0
@@ -25,7 +55,7 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 24px 80px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: 24, marginBottom: 42 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: 24, marginBottom: 42, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 13, letterSpacing: 3, color: "#8d96a8", fontWeight: 700 }}>AUDIÊNCIA SP</div>
           <h1 style={{ fontSize: "clamp(38px,6vw,72px)", lineHeight: .95, margin: "12px 0", letterSpacing: -3 }}>
@@ -36,36 +66,34 @@ export default function Home() {
           </p>
         </div>
         <div style={{ border: "1px solid #202532", borderRadius: 16, padding: "12px 16px", color: "#8d96a8", fontSize: 12 }}>
-          SIMULADOR · SP CAPITAL
+          {dataMode === "official" ? "DADOS OFICIAIS · SP CAPITAL" : "MODO DEMONSTRAÇÃO · SP CAPITAL"}
         </div>
       </div>
 
-      <section style={{ display: "grid", gridTemplateColumns: "1.3fr .7fr", gap: 18, marginBottom: 22 }}>
-        <div style={{ border: "1px solid #202532", borderRadius: 24, padding: 24, background: "#0b0e14" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <section style={{ display: "grid", gridTemplateColumns: "minmax(0,1.3fr) minmax(300px,.7fr)", gap: 18, marginBottom: 22 }}>
+        <div style={{ border: "1px solid #202532", borderRadius: 24, padding: 24, background: "#0b0e14", minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 12 }}>
             <div>
               <div style={{ fontSize: 12, color: "#7f899b", letterSpacing: 1 }}>TOP 15 · MÉDIA 3 MESES</div>
               <h2 style={{ margin: "7px 0 0", fontSize: 25 }}>Ranking</h2>
             </div>
-            <div style={{ fontSize: 11, color: "#6f7888" }}>MODO SIMULAÇÃO</div>
+            <div style={{ fontSize: 11, color: "#6f7888" }}>SIMULAÇÃO</div>
           </div>
 
           {ranking.map((r, i) => (
             <button key={r.radio} onClick={() => { setSelected(r.radio); setSeptember(r.ago); }}
-              style={{ width: "100%", display: "grid", gridTemplateColumns: "42px 1fr 130px 70px", alignItems: "center", gap: 12, padding: "13px 10px", background: r.radio === selected ? "#121722" : "transparent", color: "#f5f7fb", border: 0, borderRadius: 12, textAlign: "left", cursor: "pointer" }}>
+              style={{ width: "100%", display: "grid", gridTemplateColumns: "42px minmax(0,1fr) 110px 75px", alignItems: "center", gap: 10, padding: "13px 10px", background: r.radio === selected ? "#121722" : "transparent", color: "#f5f7fb", border: 0, borderRadius: 12, textAlign: "left", cursor: "pointer" }}>
               <span style={{ color: "#687285", fontWeight: 700 }}>#{String(i + 1).padStart(2, "0")}</span>
-              <span style={{ fontWeight: 700 }}>{r.radio}</span>
+              <span style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.radio}</span>
               <span style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmt(r.media)}</span>
-              <span style={{ textAlign: "right", color: r.change >= 0 ? "#8fa99a" : "#b59a9a", fontSize: 12 }}>
-                {r.change >= 0 ? "+" : ""}{fmt(r.change)}
-              </span>
+              <span style={{ textAlign: "right", color: r.change >= 0 ? "#8fa99a" : "#b59a9a", fontSize: 12 }}>{r.change >= 0 ? "+" : ""}{fmt(r.change)}</span>
             </button>
           ))}
         </div>
 
         <div style={{ border: "1px solid #202532", borderRadius: 24, padding: 26, background: "#0b0e14" }}>
           <div style={{ fontSize: 12, color: "#7f899b", letterSpacing: 1 }}>SIMULAR SETEMBRO</div>
-          <h2 style={{ fontSize: 38, margin: "8px 0 4px" }}>{selected}</h2>
+          <h2 style={{ fontSize: 38, margin: "8px 0 4px" }}>{selectedData.radio}</h2>
           <div style={{ color: "#8e98a8" }}>posição projetada</div>
           <div style={{ fontSize: 78, fontWeight: 800, letterSpacing: -5, margin: "12px 0" }}>#{String(position).padStart(2, "0")}</div>
           <div style={{ fontSize: 13, color: "#7f899b" }}>{positionText}</div>
@@ -90,7 +118,9 @@ export default function Home() {
       </section>
 
       <div style={{ color: "#5f697a", fontSize: 12 }}>
-        Os números exibidos nesta etapa são uma base de demonstração. Os dados oficiais serão carregados do Supabase e ficarão separados das simulações.
+        {dataMode === "official"
+          ? "Dados oficiais carregados do Supabase. A simulação de setembro não altera os dados oficiais."
+          : "Aguardando dados oficiais completos no Supabase. A tela está usando a base de demonstração enquanto isso."}
       </div>
     </main>
   );
