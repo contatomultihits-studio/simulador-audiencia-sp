@@ -21,8 +21,6 @@ export default function Home() {
         setRadios(official);
         setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
-        const disney = official.find((r) => r.radio === "Disney");
-        if (disney) setSeptember(disney.ago);
       })
       .catch(() => setDataMode("demo"));
   }, []);
