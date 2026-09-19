@@ -12,7 +12,7 @@ export default function Home() {
   const [radios, setRadios] = useState(demoRadios);
   const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
-  const [september, setSeptember] = useState(70000);
+  const [projections, setProjections] = useState<Record<string, number>>({ Disney: 70000 });
 
   useEffect(() => {
     loadOfficialAudience()
@@ -52,7 +52,7 @@ export default function Home() {
   const nextRadio = ranking[position - 2];
   const distanceToNext = nextRadio ? selectedData.media - nextRadio.media : 0;
 
-  const projectionChange = september - selectedData.ago;
+  const september = projections[selectedData.radio] ?? selectedData.ago;\n  const projectionChange = september - selectedData.ago;
   const positionText = positionChange === 0
     ? "mesma posição"
     : positionChange > 0
@@ -112,7 +112,7 @@ export default function Home() {
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
                 key={r.radio}
-                onClick={() => { setSelected(r.radio); setSeptember(r.ago); }}
+                onClick={() => setSelected(r.radio)}
                 className={"rank-row " + (r.radio === selected ? "selected" : "")}
               >
                 <span className="rank-number">#{String(i + 1).padStart(2, "0")}</span>
@@ -196,7 +196,7 @@ export default function Home() {
               </div>
               <div className="quick">
                 {[55000, 60000, 65000, 70000, 75000, 80000].map((v) => (
-                  <button key={v} onClick={() => setSeptember(v)}>{v / 1000}k</button>
+                  <button key={v} onClick={() => setProjections((p) => ({ ...p, [selectedData.radio]: v }))}>{v / 1000}k</button>
                 ))}
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function Home() {
               aria-label={`Audiência simulada de setembro para ${selectedData.radio}`}
               type="range" min="30000" max="90000" step="1000"
               value={september}
-              onChange={(e) => setSeptember(Number(e.target.value))}
+              onChange={(e) => setProjections((p) => ({ ...p, [selectedData.radio]: Number(e.target.value) }))}
             />
             <div className="range-labels"><span>30 mil</span><span>90 mil</span></div>
           </div>
