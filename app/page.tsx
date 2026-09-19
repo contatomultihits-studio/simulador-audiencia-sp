@@ -17,19 +17,33 @@ export default function Home() {
   const [loadingRecorte, setLoadingRecorte] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
     setLoadingRecorte(true);
     loadOfficialAudience(recorte)
       .then((official) => {
-        if (!official.length) return;
+        if (!active) return;
+        if (!official.length) {
+          setRadios([]);
+          setDataMode("demo");
+          return;
+        }
         setRadios(official);
         setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
       })
       .catch(() => {
+        if (!active) return;
         setRadios([]);
         setDataMode("demo");
       })
-      .finally(() => setLoadingRecorte(false));
+      .finally(() => {
+        if (active) setLoadingRecorte(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [recorte]);
 
   const hasSimulation = Object.keys(projections).length > 0;
