@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
-import { loadOfficialAudienceSets } from "../lib/audience";
+import { loadOfficialAudience } from "../lib/audience";
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
@@ -20,12 +20,13 @@ export default function Home() {
     let active = true;
 
     setLoadingRecorte(true);
-    loadOfficialAudienceSets()
-      .then((sets) => {
+    loadOfficialAudience(recorte)
+      .then((official) => {
         if (!active) return;
 
-        const official = sets[recorte];
-        if (!official.length) throw new Error("Recorte oficial sem dados");
+        if (!official.length) {
+          throw new Error("Recorte oficial sem dados");
+        }
 
         setRadios(official);
         setDataMode(official.length >= 15 ? "official" : "partial");
