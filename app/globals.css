@@ -2,3 +2,73 @@
 html,body{margin:0;padding:0;background:#07090d;color:#f5f7fb;font-family:Arial,Helvetica,sans-serif}
 body{min-height:100vh}
 button,input{font:inherit}
+button{ -webkit-tap-highlight-color:transparent }
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 75% 0%,rgba(70,85,120,.09),transparent 35%)}
+.shell{max-width:1240px;margin:0 auto;padding:52px 24px 80px;position:relative}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;margin-bottom:28px}
+.eyebrow{font-size:11px;letter-spacing:2.5px;color:#778195;font-weight:800}
+.hero h1{font-size:clamp(42px,6vw,76px);line-height:.94;letter-spacing:-4px;margin:12px 0 16px}
+.hero p{color:#929baa;font-size:17px;max-width:650px;margin:0}
+.status{border:1px solid #202532;border-radius:999px;padding:10px 14px;color:#8993a4;font-size:11px;white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#656e7e;margin-right:8px}
+.dot.live{background:#91b19c;box-shadow:0 0 12px rgba(145,177,156,.45)}
+.modebar{display:flex;gap:6px;background:#0b0e14;border:1px solid #202532;border-radius:14px;padding:5px;width:max-content;margin-bottom:18px}
+.modebar button,.quick button{border:0;background:transparent;color:#778195;border-radius:9px;padding:9px 13px;cursor:pointer}
+.modebar button.active{background:#171c27;color:#f5f7fb}
+.grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr);gap:18px}
+.panel,.challenge{border:1px solid #202532;border-radius:24px;background:#0b0e14}
+.ranking-panel{padding:24px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:14px}
+.panel-head h2{margin:7px 0 0;font-size:26px}
+.muted{color:#596376;font-size:10px;letter-spacing:1px}
+.rank-row{width:100%;display:grid;grid-template-columns:44px minmax(0,1fr) 110px 78px;align-items:center;gap:10px;padding:13px 10px;background:transparent;color:#f5f7fb;border:0;border-radius:12px;text-align:left;cursor:pointer}
+.rank-row:hover{background:#10141d}
+.rank-row.selected{background:#141925}
+.rank-number{color:#697386;font-weight:800}
+.radio-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media{text-align:right;font-variant-numeric:tabular-nums}
+.delta{text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
+.delta.up,.movement.up{color:#91aa9a}
+.delta.down,.movement.down{color:#b69a9a}
+.simulator{padding:28px}
+.simulator h2{font-size:38px;letter-spacing:-1.5px;margin:9px 0 3px}
+.position-label,.audience-label{color:#727d90;font-size:12px}
+.big-position{font-size:88px;font-weight:900;letter-spacing:-7px;line-height:1;margin:15px 0 4px}
+.movement{color:#7c8698;font-size:13px;min-height:20px}
+.audience-label{margin-top:28px}
+.audience-value{font-size:32px;font-weight:800;margin:5px 0 18px}
+input[type=range]{width:100%;accent-color:#e8ebf0;cursor:pointer}
+.range-labels{display:flex;justify-content:space-between;color:#596376;font-size:10px;margin-top:7px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:17px}
+.quick button{background:#151a24;border:1px solid #252c3a;color:#dce1ea;padding:9px 4px}
+.quick button:hover{background:#1b2230}
+.stats{display:grid;grid-template-columns:1fr;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid #202532}
+.stats div{display:flex;justify-content:space-between;gap:12px;color:#717b8d;font-size:11px}
+.stats b{color:#f5f7fb;font-size:13px}
+.next-target{margin-top:18px;padding:15px;border:1px solid #202532;border-radius:14px;background:#0e121a}
+.next-target span,.next-target small{display:block;color:#687285;font-size:10px;letter-spacing:1px}
+.next-target strong{display:block;margin:5px 0;font-size:15px}
+.challenge{display:grid;grid-template-columns:1.3fr .45fr .9fr;gap:24px;align-items:center;padding:24px;margin-bottom:18px}
+.challenge h2{margin:8px 0 6px;font-size:28px;letter-spacing:-1px}
+.challenge p{margin:0;color:#7f899b;font-size:13px;line-height:1.5}
+.challenge-result{border-left:1px solid #202532;padding-left:22px}
+.challenge-result.complete{border-color:#91aa9a}
+.challenge-label{color:#778195;font-size:10px;letter-spacing:1.5px}
+.challenge-position{font-size:48px;font-weight:900;letter-spacing:-3px;margin:3px 0}
+.challenge-small{color:#697386;font-size:11px}
+.challenge-controls input{margin-bottom:5px}
+footer{margin-top:18px;color:#596376;font-size:11px}
+@media(max-width:850px){
+  .hero{align-items:flex-start;flex-direction:column}
+  .grid{grid-template-columns:1fr}
+  .challenge{grid-template-columns:1fr}
+  .challenge-result{border-left:0;border-top:1px solid #202532;padding:15px 0 0}
+}
+@media(max-width:560px){
+  .shell{padding:30px 14px 60px}
+  .hero h1{letter-spacing:-2.5px}
+  .rank-row{grid-template-columns:38px minmax(0,1fr) 88px 55px;padding:12px 5px}
+  .ranking-panel,.simulator{padding:18px}
+  .big-position{font-size:72px}
+  .status{white-space:normal}
+}
