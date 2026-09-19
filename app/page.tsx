@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
 import { loadOfficialAudience } from "../lib/audience";
@@ -10,18 +10,19 @@ const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
 export default function Home() {
   const [radios, setRadios] = useState(demoRadios);
-  const [dataMode, setDataMode] = useState<"demo" | "official">("demo");
+  const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
-  const [september, setSeptember] = useState(55002);
-  const [mode, setMode] = useState<"simulador" | "desafio">("simulador");
+  const [september, setSeptember] = useState(70000);
 
   useEffect(() => {
     loadOfficialAudience()
       .then((official) => {
         if (!official.length) return;
         setRadios(official);
-        setDataMode("official");
+        setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
+        const disney = official.find((r) => r.radio === "Disney");
+        if (disney) setSeptember(disney.ago);
       })
       .catch(() => setDataMode("demo"));
   }, []);
@@ -33,6 +34,7 @@ export default function Home() {
 
   const selectedData = ranking.find((r) => r.radio === selected) ?? ranking[0];
   const position = ranking.findIndex((r) => r.radio === selected) + 1;
+
   const currentMedia = selectedData
     ? (selectedData.jun + selectedData.jul + selectedData.ago) / 3
     : 0;
@@ -46,17 +48,33 @@ export default function Home() {
 
   const previousPosition = previousRanking.findIndex((r) => r.radio === selected) + 1;
   const positionChange = previousPosition - position;
-  const targetPosition = 10;
-  const challengeComplete = selected === "Disney" && position <= targetPosition;
 
   const nextRadio = ranking[position - 2];
   const distanceToNext = nextRadio ? selectedData.media - nextRadio.media : 0;
 
+  const projectionChange = september - selectedData.ago;
   const positionText = positionChange === 0
     ? "mesma posição"
     : positionChange > 0
       ? "subiu " + positionChange + " posição" + (positionChange > 1 ? "ões" : "")
       : "caiu " + Math.abs(positionChange) + " posição" + (Math.abs(positionChange) > 1 ? "ões" : "");
+
+  const chart = useMemo(() => {
+    const values = [selectedData.jun, selectedData.jul, selectedData.ago, september];
+    const width = 640;
+    const height = 210;
+    const padX = 38;
+    const padY = 30;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = Math.max(max - min, 1);
+    const points = values.map((value, index) => {
+      const x = padX + index * ((width - padX * 2) / 3);
+      const y = height - padY - ((value - min) / span) * (height - padY * 2);
+      return { x, y, value };
+    });
+    return { width, height, points, line: points.map((p) => `${p.x},${p.y}`).join(" ") };
+  }, [selectedData, september]);
 
   if (!selectedData) return null;
 
@@ -65,55 +83,18 @@ export default function Home() {
       <header className="hero">
         <div>
           <div className="eyebrow">AUDIÊNCIA SP</div>
-          <h1>O ranking<br />está nas suas mãos.</h1>
-          <p>Mexa em setembro e veja a média móvel de 3 meses mudar em tempo real.</p>
+          <h1>Veja a audiência<br />se mover.</h1>
+          <p>Histórico real, projeção de setembro e média móvel de 3 meses — tudo na mesma visualização.</p>
         </div>
         <div className="status">
           <span className={dataMode === "official" ? "dot live" : "dot"} />
-          {dataMode === "official" ? "DADOS OFICIAIS · SP CAPITAL" : "BASE DE DEMONSTRAÇÃO"}
+          {dataMode === "official"
+            ? "DADOS OFICIAIS · SP CAPITAL"
+            : dataMode === "partial"
+              ? "BASE OFICIAL PARCIAL · SP CAPITAL"
+              : "BASE DE DEMONSTRAÇÃO"}
         </div>
       </header>
-
-      <nav className="modebar">
-        <button className={mode === "simulador" ? "active" : ""} onClick={() => setMode("simulador")}>SIMULADOR</button>
-        <button className={mode === "desafio" ? "active" : ""} onClick={() => { setMode("desafio"); setSelected("Disney"); }}>DESAFIO</button>
-      </nav>
-
-      <AnimatePresence mode="wait">
-        {mode === "desafio" ? (
-          <motion.section
-            key="challenge"
-            className="challenge"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-          >
-            <div>
-              <div className="eyebrow">DESAFIO 01</div>
-              <h2>Leve a Disney para o Top 10.</h2>
-              <p>Você controla apenas setembro. As outras rádios repetem agosto nesta simulação.</p>
-            </div>
-            <div className={"challenge-result " + (challengeComplete ? "complete" : "")}>
-              <div className="challenge-label">{challengeComplete ? "DESAFIO CONCLUÍDO" : "AINDA NÃO"}</div>
-              <div className="challenge-position">#{String(position).padStart(2, "0")}</div>
-              <div className="challenge-small">Disney · {fmt(september)} em setembro</div>
-            </div>
-            <div className="challenge-controls">
-              <input
-                aria-label="Audiência da Disney em setembro"
-                type="range" min="30000" max="90000" step="1000"
-                value={september}
-                onChange={(e) => setSeptember(Number(e.target.value))}
-              />
-              <div className="quick">
-                {[60000, 65000, 70000, 75000, 80000].map((v) => (
-                  <button key={v} onClick={() => setSeptember(v)}>{v / 1000}k</button>
-                ))}
-              </div>
-            </div>
-          </motion.section>
-        ) : null}
-      </AnimatePresence>
 
       <section className="grid">
         <div className="panel ranking-panel">
@@ -122,73 +103,133 @@ export default function Home() {
               <div className="eyebrow">TOP 15 · MÉDIA MÓVEL</div>
               <h2>Ranking</h2>
             </div>
-            <span className="muted">SETEMBRO SIMULADO</span>
+            <span className="muted">SETEMBRO · PROJEÇÃO</span>
           </div>
 
           <div className="rows">
-            <AnimatePresence initial={false}>
-              {ranking.map((r, i) => (
-                <motion.button
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                  key={r.radio}
-                  onClick={() => { setSelected(r.radio); setSeptember(r.ago); }}
-                  className={"rank-row " + (r.radio === selected ? "selected" : "")}
-                >
-                  <span className="rank-number">#{String(i + 1).padStart(2, "0")}</span>
-                  <span className="radio-name">{r.radio}</span>
-                  <span className="media">{fmt(r.media)}</span>
-                  <span className={"delta " + (r.change >= 0 ? "up" : "down")}>
-                    {r.change >= 0 ? "+" : ""}{fmt(r.change)}
-                  </span>
-                </motion.button>
-              ))}
-            </AnimatePresence>
+            {ranking.map((r, i) => (
+              <motion.button
+                layout
+                transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                key={r.radio}
+                onClick={() => { setSelected(r.radio); setSeptember(r.ago); }}
+                className={"rank-row " + (r.radio === selected ? "selected" : "")}
+              >
+                <span className="rank-number">#{String(i + 1).padStart(2, "0")}</span>
+                <span className="radio-name">{r.radio}</span>
+                <span className="media">{fmt(r.media)}</span>
+                <span className={"delta " + (r.change >= 0 ? "up" : "down")}>
+                  {r.change >= 0 ? "+" : ""}{fmt(r.change)}
+                </span>
+              </motion.button>
+            ))}
           </div>
         </div>
 
         <aside className="panel simulator">
-          <div className="eyebrow">SIMULAR SETEMBRO</div>
+          <div className="eyebrow">SIMULADOR</div>
           <h2>{selectedData.radio}</h2>
-          <div className="position-label">posição projetada</div>
-          <motion.div
-            key={position}
-            initial={{ scale: .82, opacity: .5 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="big-position"
-          >
-            #{String(position).padStart(2, "0")}
-          </motion.div>
-          <div className={"movement " + (positionChange > 0 ? "up" : positionChange < 0 ? "down" : "")}>
-            {positionText}
+
+          <div className="projection-top">
+            <div>
+              <div className="position-label">posição projetada</div>
+              <motion.div
+                key={position}
+                initial={{ scale: .82, opacity: .5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="big-position"
+              >
+                #{String(position).padStart(2, "0")}
+              </motion.div>
+              <div className={"movement " + (positionChange > 0 ? "up" : positionChange < 0 ? "down" : "")}>
+                {positionText}
+              </div>
+            </div>
+            <div className="projection-number">
+              <span>SETEMBRO</span>
+              <strong>{fmt(september)}</strong>
+              <small>{projectionChange >= 0 ? "+" : ""}{fmt(projectionChange)} vs. agosto</small>
+            </div>
           </div>
 
-          <div className="audience-label">AUDIÊNCIA EM SETEMBRO</div>
-          <div className="audience-value">{fmt(september)}</div>
-          <input
-            aria-label="Audiência simulada de setembro"
-            type="range" min="30000" max="90000" step="1000"
-            value={september}
-            onChange={(e) => setSeptember(Number(e.target.value))}
-          />
-          <div className="range-labels"><span>30 mil</span><span>90 mil</span></div>
+          <div className="history">
+            <div className="history-head">
+              <div>
+                <span className="eyebrow">EVOLUÇÃO MÊS A MÊS</span>
+                <strong>Histórico → projeção</strong>
+              </div>
+              <span className="projection-badge">SET · PROJEÇÃO</span>
+            </div>
 
-          <div className="quick">
-            {[55000, 60000, 70000, 80000].map((v) => (
-              <button key={v} onClick={() => setSeptember(v)}>{v / 1000}k</button>
-            ))}
+            <div className="chart-wrap">
+              <svg viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label={`Audiência de junho a setembro de ${selectedData.radio}`}>
+                <line x1="38" y1="180" x2="602" y2="180" className="chart-axis" />
+                <polyline points={chart.line} className="chart-line" />
+                <line x1={chart.points[2].x} y1="22" x2={chart.points[2].x} y2="190" className="projection-divider" />
+                {chart.points.map((point, index) => (
+                  <g key={index}>
+                    <circle cx={point.x} cy={point.y} r={index === 3 ? 6 : 4.5} className={index === 3 ? "chart-dot projected" : "chart-dot"} />
+                    <text x={point.x} y="202" textAnchor="middle" className="chart-label">
+                      {["JUN", "JUL", "AGO", "SET"][index]}
+                    </text>
+                    <text x={point.x} y={Math.max(point.y - 12, 15)} textAnchor="middle" className="chart-value">
+                      {fmt(point.value)}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            <div className="history-values">
+              <div><span>JUN</span><b>{fmt(selectedData.jun)}</b></div>
+              <div><span>JUL</span><b>{fmt(selectedData.jul)}</b></div>
+              <div><span>AGO</span><b>{fmt(selectedData.ago)}</b></div>
+              <div className="projected"><span>SET</span><b>{fmt(september)}</b></div>
+            </div>
           </div>
 
-          <div className="stats">
-            <div><span>MÉDIA PROJETADA</span><b>{fmt(selectedData.media)}</b></div>
-            <div><span>MÉDIA ATUAL</span><b>{fmt(currentMedia)}</b></div>
-            <div><span>VARIAÇÃO</span><b>{selectedData.change >= 0 ? "+" : ""}{fmt(selectedData.change)}</b></div>
+          <div className="audience-control">
+            <div className="audience-control-head">
+              <div>
+                <span className="audience-label">ARRASTE SETEMBRO</span>
+                <div className="audience-value">{fmt(september)}</div>
+              </div>
+              <div className="quick">
+                {[55000, 60000, 65000, 70000, 75000, 80000].map((v) => (
+                  <button key={v} onClick={() => setSeptember(v)}>{v / 1000}k</button>
+                ))}
+              </div>
+            </div>
+            <input
+              aria-label={`Audiência simulada de setembro para ${selectedData.radio}`}
+              type="range" min="30000" max="90000" step="1000"
+              value={september}
+              onChange={(e) => setSeptember(Number(e.target.value))}
+            />
+            <div className="range-labels"><span>30 mil</span><span>90 mil</span></div>
+          </div>
+
+          <div className="average-flow">
+            <div>
+              <span>MÉDIA ATUAL</span>
+              <b>{fmt(currentMedia)}</b>
+            </div>
+            <div className="flow-arrow">→</div>
+            <div className="projected">
+              <span>MÉDIA PROJETADA</span>
+              <b>{fmt(selectedData.media)}</b>
+            </div>
+            <div className={"flow-change " + (selectedData.change >= 0 ? "up" : "down")}>
+              {selectedData.change >= 0 ? "+" : ""}{fmt(selectedData.change)}
+            </div>
           </div>
 
           {nextRadio ? (
             <div className="next-target">
-              <span>PRÓXIMA RÁDIO</span>
-              <strong>{nextRadio.radio}</strong>
+              <div>
+                <span>RÁDIO ACIMA</span>
+                <strong>{nextRadio.radio}</strong>
+              </div>
               <small>{Math.abs(distanceToNext).toLocaleString("pt-BR")} de diferença</small>
             </div>
           ) : null}
@@ -197,8 +238,10 @@ export default function Home() {
 
       <footer>
         {dataMode === "official"
-          ? "Dados oficiais carregados do Supabase. A simulação não altera os dados oficiais."
-          : "Aguardando a base oficial completa. A tela usa demonstração enquanto isso."}
+          ? "Os meses históricos são preservados. A projeção de setembro existe apenas no simulador e não altera a base oficial."
+          : dataMode === "partial"
+            ? "A base oficial ainda não está completa. A projeção é apenas para visualização e não altera os dados oficiais."
+            : "Modo demonstração: os dados históricos são ilustrativos. A projeção de setembro não altera a base."}
       </footer>
     </main>
   );
