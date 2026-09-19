@@ -25,10 +25,18 @@ export default function Home() {
       .catch(() => setDataMode("demo"));
   }, []);
 
-  const ranking = useMemo(
-    () => calculateRanking(radios, selected, september),
-    [radios, selected, september]
-  );
+  const hasSimulation = Object.keys(projections).length > 0;
+
+  const ranking = useMemo(() => {
+    return radios
+      .map((radio) => {
+        const projection = projections[radio.radio] ?? radio.ago;
+        const media = (radio.jul + radio.ago + projection) / 3;
+        const currentMedia = (radio.jun + radio.jul + radio.ago) / 3;
+        return { ...radio, media, change: media - currentMedia };
+      })
+      .sort((a, b) => b.media - a.media);
+  }, [radios, projections]);
 
   const selectedData = ranking.find((r) => r.radio === selected) ?? ranking[0];
   const position = ranking.findIndex((r) => r.radio === selected) + 1;
