@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
-import { loadOfficialAudience } from "../lib/audience";
+import { loadOfficialAudienceSets } from "../lib/audience";
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
@@ -20,21 +20,20 @@ export default function Home() {
     let active = true;
 
     setLoadingRecorte(true);
-    loadOfficialAudience(recorte)
-      .then((official) => {
+    loadOfficialAudienceSets()
+      .then((sets) => {
         if (!active) return;
-        if (!official.length) {
-          setRadios(demoRadios);
-          setDataMode("demo");
-          return;
-        }
+
+        const official = sets[recorte];
+        if (!official.length) throw new Error("Recorte oficial sem dados");
+
         setRadios(official);
         setDataMode(official.length >= 15 ? "official" : "partial");
         setSelected(official.some((r) => r.radio === "Disney") ? "Disney" : official[0].radio);
       })
       .catch(() => {
         if (!active) return;
-        setRadios(demoRadios);
+        setRadios([]);
         setDataMode("demo");
       })
       .finally(() => {
