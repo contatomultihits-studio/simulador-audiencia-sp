@@ -194,3 +194,13 @@ body{
 @media (min-width: 900px){
   .methodology p{white-space:nowrap}
 }
+
+
+.view-switch{display:flex;gap:4px;width:max-content;margin:0 0 22px;padding:4px;border:1px solid #252d3a;border-radius:12px;background:#0d1118;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.view-switch button{border:0;background:transparent;color:#7f8999;border-radius:9px;padding:10px 18px;min-width:150px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s ease}
+.view-switch button span{display:block;margin-top:4px;font-size:9px;font-weight:500;letter-spacing:.2px;color:#5f6877}
+.view-switch button:hover{color:#dce2eb;background:#151b25}
+.view-switch button.active{color:#f4f6fa;background:#1a2030;box-shadow:0 0 0 1px rgba(124,108,255,.28) inset,0 6px 18px rgba(0,0,0,.18)}
+.view-switch button.active span{color:#9da8ba}
+.view-switch button.projection-tab.active{background:linear-gradient(135deg,rgba(124,108,255,.22),rgba(76,201,255,.08));box-shadow:0 0 0 1px rgba(124,108,255,.38) inset,0 0 24px rgba(124,108,255,.08)}
+@media (max-width:700px){.view-switch{width:100%}.view-switch button{min-width:0;flex:1;padding:9px 10px}}
