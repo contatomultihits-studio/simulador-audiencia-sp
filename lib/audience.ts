@@ -10,7 +10,7 @@ type AudienceRow = {
 const monthKey = (date: string) => date.slice(0, 7);
 
 export async function loadOfficialAudience(recorte: "todos_os_dias" | "seg_sex_06_19" = "todos_os_dias"): Promise<RadioMonth[]> {
-  if (!supabase) return [];
+  if (!supabase) throw new Error("Supabase não configurado");
 
   const { data, error } = await supabase
     .from("audiencia_ranking")
