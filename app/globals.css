@@ -189,3 +189,8 @@ body{
 .methodology-label{
   color:#777f8f;
 }
+
+
+@media (min-width: 900px){
+  .methodology p{white-space:nowrap}
+}
