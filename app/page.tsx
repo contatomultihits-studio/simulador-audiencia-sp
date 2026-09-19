@@ -90,8 +90,8 @@ export default function Home() {
   const nextRadio = viewMode === "projection" ? ranking[position - 2] : null;
   const distanceToNext = nextRadio ? selectedData.media - nextRadio.media : 0;
 
-  const september = projections[selectedData.radio] ?? selectedData.ago;
-  const projectionChange = september - selectedData.ago;
+  const september = selectedData ? (projections[selectedData.radio] ?? selectedData.ago) : 0;
+  const projectionChange = selectedData ? september - selectedData.ago : 0;
   const positionText = positionChange === 0
     ? "mesma posição"
     : positionChange > 0
@@ -99,6 +99,7 @@ export default function Home() {
       : "caiu " + Math.abs(positionChange) + " posição" + (Math.abs(positionChange) > 1 ? "ões" : "");
 
   const chart = useMemo(() => {
+    if (!selectedData) return { width: 640, height: 210, points: [], line: "" };
     const values = viewMode === "projection" ? [selectedData.jun, selectedData.jul, selectedData.ago, september] : [selectedData.jun, selectedData.jul, selectedData.ago];
     const width = 640;
     const height = 210;
