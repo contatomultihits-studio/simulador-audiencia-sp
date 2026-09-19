@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
 import { loadOfficialAudience } from "../lib/audience";
-import { calculateRanking } from "../lib/ranking";
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
@@ -13,6 +12,7 @@ export default function Home() {
   const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
   const [projections, setProjections] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<"current" | "projection">("current");
 
   useEffect(() => {
     loadOfficialAudience()
@@ -27,7 +27,19 @@ export default function Home() {
 
   const hasSimulation = Object.keys(projections).length > 0;
 
+  const currentRanking = useMemo(() => {
+    return [...radios]
+      .map((radio) => ({
+        ...radio,
+        media: (radio.jun + radio.jul + radio.ago) / 3,
+        change: 0
+      }))
+      .sort((a, b) => b.media - a.media);
+  }, [radios]);
+
   const ranking = useMemo(() => {
+    if (viewMode === "current") return currentRanking;
+
     return radios
       .map((radio) => {
         const projection = projections[radio.radio] ?? radio.ago;
@@ -36,7 +48,7 @@ export default function Home() {
         return { ...radio, media, change: media - currentMedia };
       })
       .sort((a, b) => b.media - a.media);
-  }, [radios, projections]);
+  }, [radios, projections, viewMode, currentRanking]);
 
   const selectedData = ranking.find((r) => r.radio === selected) ?? ranking[0];
   const position = ranking.findIndex((r) => r.radio === selected) + 1;
@@ -45,17 +57,12 @@ export default function Home() {
     ? (selectedData.jun + selectedData.jul + selectedData.ago) / 3
     : 0;
 
-  const previousRanking = useMemo(
-    () => [...radios].sort((a, b) =>
-      (b.jun + b.jul + b.ago) - (a.jun + a.jul + a.ago)
-    ),
-    [radios]
-  );
+  const previousRanking = currentRanking;
 
   const previousPosition = previousRanking.findIndex((r) => r.radio === selected) + 1;
-  const positionChange = previousPosition - position;
+  const positionChange = viewMode === "projection" ? previousPosition - position : 0;
 
-  const nextRadio = ranking[position - 2];
+  const nextRadio = viewMode === "projection" ? ranking[position - 2] : null;
   const distanceToNext = nextRadio ? selectedData.media - nextRadio.media : 0;
 
   const september = projections[selectedData.radio] ?? selectedData.ago;
@@ -103,6 +110,15 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="view-switch" role="tablist" aria-label="Modo de visualização">
+        <button className={viewMode === "current" ? "active" : ""} onClick={() => setViewMode("current")} role="tab" aria-selected={viewMode === "current"}>
+          RANKING ATUAL<span>Dados da base</span>
+        </button>
+        <button className={viewMode === "projection" ? "active projection-tab" : ""} onClick={() => setViewMode("projection")} role="tab" aria-selected={viewMode === "projection"}>
+          PROJEÇÃO<span>Simule setembro</span>
+        </button>
+      </div>
+
       <section className="grid">
         <div className="panel ranking-panel">
           <div className="panel-head">
@@ -110,7 +126,7 @@ export default function Home() {
               <div className="eyebrow">TOP 15 · MÉDIA MÓVEL</div>
               <h2>Ranking</h2>
             </div>
-            <div className="panel-actions"><span className="muted">{hasSimulation ? "SETEMBRO · SIMULAÇÃO" : "DADOS REAIS"}</span>{hasSimulation ? <button className="reset-button" onClick={() => setProjections({})}>↺ VOLTAR AO ORIGINAL</button> : null}</div>
+            <div className="panel-actions"><span className="muted">{viewMode === "projection" ? "SETEMBRO · SIMULAÇÃO" : "BASE ATUAL"}</span>{viewMode === "projection" && hasSimulation ? <button className="reset-button" onClick={() => setProjections({})}>↺ LIMPAR SIMULAÇÃO</button> : null}</div>
           </div>
 
           <div className="rows">
@@ -134,12 +150,12 @@ export default function Home() {
         </div>
 
         <aside className="panel simulator">
-          <div className="eyebrow">SIMULADOR</div>
+          <div className="eyebrow">{viewMode === "projection" ? "PROJEÇÃO" : "RANKING ATUAL"}</div>
           <h2>{selectedData.radio}</h2>
 
           <div className="projection-top">
             <div>
-              <div className="position-label">posição projetada</div>
+              <div className="position-label">{viewMode === "projection" ? "posição projetada" : "posição atual"}</div>
               <motion.div
                 key={position}
                 initial={{ scale: .82, opacity: .5 }}
@@ -165,7 +181,7 @@ export default function Home() {
                 <span className="eyebrow">EVOLUÇÃO MÊS A MÊS</span>
                 <strong>Histórico → projeção</strong>
               </div>
-              <span className="projection-badge">{hasSimulation ? "SET · SIMULAÇÃO" : "SET · BASE REAL"}</span>
+              <span className="projection-badge">{viewMode === "projection" ? "SET · SIMULAÇÃO" : "BASE REAL"}</span>
             </div>
 
             <div className="chart-wrap">
@@ -195,7 +211,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="audience-control">
+          {viewMode === "projection" ? <div className="audience-control">
             <div className="audience-control-head">
               <div>
                 <span className="audience-label">ARRASTE SETEMBRO</span>
@@ -214,20 +230,20 @@ export default function Home() {
               onChange={(e) => setProjections((p) => ({ ...p, [selectedData.radio]: Number(e.target.value) }))}
             />
             <div className="range-labels"><span>30 mil</span><span>90 mil</span></div>
-          </div>
+          </div> : null}
 
           <div className="average-flow">
             <div>
               <span>MÉDIA ATUAL</span>
               <b>{fmt(currentMedia)}</b>
             </div>
-            <div className="flow-arrow">→</div>
+            <div className="flow-arrow">{viewMode === "projection" ? "→" : "•"}</div>
             <div className="projected">
-              <span>MÉDIA PROJETADA</span>
+              <span>{viewMode === "projection" ? "MÉDIA PROJETADA" : "MÉDIA ATUAL"}</span>
               <b>{fmt(selectedData.media)}</b>
             </div>
             <div className={"flow-change " + (selectedData.change >= 0 ? "up" : "down")}>
-              {selectedData.change >= 0 ? "+" : ""}{fmt(selectedData.change)}
+              {viewMode === "projection" ? (selectedData.change >= 0 ? "+" : "") + fmt(selectedData.change) : "base"}
             </div>
           </div>
 
