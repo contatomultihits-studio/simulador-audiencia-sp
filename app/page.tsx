@@ -4,10 +4,36 @@ import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { demoRadios } from "../lib/demo-data";
 import { loadOfficialAudience } from "../lib/audience";
+import { irParaLogin, sair, verificarAcesso } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(Math.round(n));
 
+// Sem login (ou sem autorização), vai para a tela de login. Com login, o simulador funciona como antes.
 export default function Home() {
+  const [liberado, setLiberado] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    verificarAcesso().then((acesso) => {
+      if (!active) return;
+      if (acesso === "ok") setLiberado(true);
+      else irParaLogin();
+    });
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") irParaLogin();
+    });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!liberado) return null;
+  return <Simulador />;
+}
+
+function Simulador() {
   const [radios, setRadios] = useState<typeof demoRadios>([]);
   const [dataMode, setDataMode] = useState<"demo" | "official" | "partial">("demo");
   const [selected, setSelected] = useState("Disney");
@@ -319,6 +345,7 @@ export default function Home() {
           : dataMode === "partial"
             ? "A base oficial ainda não está completa. A projeção é apenas para visualização e não altera os dados oficiais."
             : "Modo demonstração: os dados históricos são ilustrativos. A projeção de setembro não altera a base."}
+        {" "}<button className="sair" onClick={sair}>Sair</button>
       </footer>
 
       <footer className="methodology">

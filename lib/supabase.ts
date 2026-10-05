@@ -8,9 +8,11 @@ export const supabase = createClient(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false
+      // Login com os mesmos usuários do monitoramento: a sessão fica salva no navegador.
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storageKey: "simulador-audiencia-sp-auth"
     }
   }
 );
